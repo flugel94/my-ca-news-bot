@@ -1,0 +1,35 @@
+name: Daily CA News Bot
+
+on:
+  schedule:
+    # 日本時間 朝8:00 (UTC 23:00) に実行
+    - cron: '0 23 * * *'
+  workflow_dispatch: {}  # ← ここに {} を追加して明示的にしました
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run script
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+        run: |
+          # フォルダ構成に対応するため、モジュールとして実行する形でもOKですが、
+          # 今回はシンプルに main.py を叩きます
+          python main.py
