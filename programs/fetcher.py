@@ -5,11 +5,16 @@ from .config import ALL_SOURCES
 
 def is_within_target_period(entry):
     published_parsed = entry.get('published_parsed') or entry.get('updated_parsed')
+    
+    # 日付不明な記事は、念のため「通過」させる（または厳格にするなら False）
+    # ここでは「日付がない＝判定できない」ので、新しい可能性があるとして True にしておきます
     if not published_parsed: return True
+    
     try:
         now = datetime.datetime.now(datetime.timezone.utc)
         pub_dt = datetime.datetime(*published_parsed[:6], tzinfo=datetime.timezone.utc)
-        # 24時間以内
+        
+        # ★ここを 72 から 24 に戻しました★
         return (now - pub_dt) <= datetime.timedelta(hours=24)
     except: return True
 
@@ -27,6 +32,8 @@ def fetch_rss_data():
             
             for entry in feed.entries[:5]:
                 if entry.link in seen_links: continue
+                
+                # 期間チェック (24時間)
                 if not is_within_target_period(entry): continue
                 
                 summary = entry.get('summary', '') or entry.get('description', '')
